@@ -1,0 +1,101 @@
+{
+  "service_title": "Security Operations Center",
+  "service_description": "Top-level service monitoring the health of all SOC functions including threat detection, incident response, vulnerability management, and identity security.",
+  "service_priority": "critical",
+  "service_tags": ["security", "soc", "operations"],
+  "entity_rules": [
+    {
+      "rule_type": "matches",
+      "field": "service_category",
+      "value": "security"
+    }
+  ],
+  "child_services": [
+    {
+      "title": "SIEM Platform Health",
+      "description": "Monitors the health and performance of the Splunk SIEM platform",
+      "kpis": [
+        {
+          "title": "Indexing Rate (EPS)",
+          "base_search": "index=_internal source=*metrics.log group=per_index_thruput | stats sum(kb) as total_kb | eval eps=total_kb*1024/1000",
+          "threshold_template": "standard",
+          "urgency": "high",
+          "unit": "events/sec",
+          "aggregate_statop": "avg"
+        },
+        {
+          "title": "Search Concurrency",
+          "base_search": "index=_internal source=*metrics.log group=search_concurrency | stats max(active_hist_searches) as active_searches",
+          "threshold_template": "standard",
+          "urgency": "medium",
+          "unit": "searches",
+          "aggregate_statop": "max"
+        },
+        {
+          "title": "License Usage Percentage",
+          "base_search": "index=_internal source=*license_usage.log type=Usage | stats sum(b) as bytes | eval pct_used=round(bytes/license_quota*100,2)",
+          "threshold_template": "standard",
+          "urgency": "high",
+          "unit": "percent",
+          "aggregate_statop": "latest"
+        },
+        {
+          "title": "Forwarder Connectivity",
+          "base_search": "index=_internal source=*metrics.log group=tcpin_connections | stats dc(hostname) as connected_forwarders",
+          "threshold_template": "standard",
+          "urgency": "high",
+          "unit": "forwarders",
+          "aggregate_statop": "latest"
+        }
+      ]
+    },
+    {
+      "title": "Threat Detection",
+      "description": "Monitors detection capabilities including correlation searches, notable events, and MITRE ATT&CK coverage",
+      "kpis": [
+        {
+          "title": "Notable Events per Hour",
+          "base_search": "index=notable | timechart span=1h count",
+          "urgency": "medium",
+          "unit": "events/hr"
+        },
+        {
+          "title": "Mean Time to Detect (MTTD)",
+          "base_search": "index=notable | eval mttd=(_time - trigger_time)/60 | stats avg(mttd) as avg_mttd",
+          "urgency": "high",
+          "unit": "minutes"
+        },
+        {
+          "title": "False Positive Rate",
+          "base_search": "index=notable | stats count(eval(status=\"closed_false_positive\")) as fp, count as total | eval fp_rate=round(fp/total*100,2)",
+          "urgency": "medium",
+          "unit": "percent"
+        }
+      ]
+    },
+    {
+      "title": "Incident Response",
+      "description": "Tracks incident response metrics and SLA compliance",
+      "kpis": [
+        {
+          "title": "Open Incidents",
+          "base_search": "index=notable status!=closed | stats count",
+          "urgency": "high",
+          "unit": "incidents"
+        },
+        {
+          "title": "Mean Time to Respond (MTTR)",
+          "base_search": "index=notable status=closed | eval mttr=(resolved_time - _time)/60 | stats avg(mttr) as avg_mttr",
+          "urgency": "high",
+          "unit": "minutes"
+        },
+        {
+          "title": "SLA Compliance",
+          "base_search": "index=notable | eval within_sla=if(response_time<=sla_target,1,0) | stats avg(within_sla) as sla_pct | eval sla_pct=round(sla_pct*100,2)",
+          "urgency": "critical",
+          "unit": "percent"
+        }
+      ]
+    }
+  ]
+}
