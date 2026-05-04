@@ -1,4 +1,6 @@
 # Splunk ITSI Predictive Monitoring Engine - Predictive monitoring for performance using Splunk ITSI
+This engine uses **Splunk ITSI** to predict and monitor, providing real-time insights into resource usage, configuration, and security best practices.
+
 
 ![Splunk](https://img.shields.io/badge/Splunk-000000?style=for-the-badge&logo=splunk&logoColor=white)
 ![ITSI](https://img.shields.io/badge/ITSI-Service_Intelligence-blue?style=for-the-badge)
